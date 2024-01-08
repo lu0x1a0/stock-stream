@@ -21,13 +21,13 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
-resource "aws_iam_role" "iam_for_lambda" {
+resource "aws_iam_role" "lambda_yfinance_daily_batch_iam" {
   name               = "iam_for_lambda"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 
-resource "aws_lambda_function" "test_lambda" {
+resource "aws_lambda_function" "lambda_yfinance_daily_batch" {
   # If the file is not in the current working directory you will need to include a
   # path.module in the filename.
   filename      = "lambda_function_payload.zip"
