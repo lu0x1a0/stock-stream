@@ -1,33 +1,13 @@
 # example from tf doc
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function
 
-# https://registry.terraform.io/providers/hashicorp/aws/latest/docs
-# according to this link, we dont have to define var AWS credential related ENV VAR
-
-# TODO: move `provider` to `dev` and `prod` instead of `modules`
-provider "aws" {
-}
-
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
-  }
-}
-
-resource "aws_iam_role" "lambda_yfinance_daily_batch_iam" {
+resource "aws_iam_role" "iam_for_lambda" {
   name               = "iam_for_lambda"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 
-resource "aws_lambda_function" "lambda_yfinance_daily_batch" {
+resource "aws_lambda_function" "test_lambda" {
   # If the file is not in the current working directory you will need to include a
   # path.module in the filename.
   filename      = "lambda_function_payload.zip"
