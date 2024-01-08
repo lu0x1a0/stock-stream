@@ -91,6 +91,7 @@ def get_symbols_data_multi(
     s3_save_bucket: str = None,
     s3_parent_key: str = None,
     yf_hist_args: dict = {"interval": "1m"},
+    symbol_info: bool = False
 ):
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_worker) as executor:
         logger.info(f"yfinance receiving arguments: {yf_hist_args}")
@@ -133,6 +134,14 @@ def get_symbols_data_multi(
                         f"s3://{s3_save_bucket}/{s3_parent_key}/{symbol}/{yf_hist_args.get('start',datetime.date.today())}.parquet",
                         compression="gzip",
                     )
+        
+        if symbol_info:
+            future_to_symbol = {
+                executor.submit(
+                    lambda : yf.Ticker(symbol).info
+                ): symbol
+                for symbol in symbols
+            }
 
 
 def check_symbols_info_multi(symbols, max_worker=10, print_data=False):
