@@ -1,9 +1,6 @@
 # example from tf doc
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function
 
-provider "aws" {
-  region = var.deployment_region
-}
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
