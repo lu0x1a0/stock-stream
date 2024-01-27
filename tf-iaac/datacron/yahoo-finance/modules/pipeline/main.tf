@@ -23,6 +23,7 @@ resource "null_resource" "lambda_yfinance_daily_batch_code_zip" {
     triggers = {
       requirement1 = filesha1("${local.datacron_yfinance_folder}/awslambda.py")
       requirement2 = filesha1("${local.datacron_yfinance_folder}/ASX_Listed_Companies_17-12-2023_01-39-05_AEDT.csv")
+      requirement3 = filesha1("${local.datacron_yfinance_folder}/logconfig_aws.yaml")
     }
     provisioner "local-exec" {
       command = <<EOT
@@ -36,6 +37,25 @@ resource "null_resource" "lambda_yfinance_daily_batch_code_zip" {
       EOT
   }
 }
+
+resource "aws_s3_object" "lambda_yfinance_daily_batch_code_zip" {
+  bucket = "${var.code_bucket_name}"
+  key    = "yahoo-finance/lambda_cron_code.zip"
+  source = "${local.datacron_yfinance_folder}/lambda_cron_code.zip"
+
+  # The filemd5() function is available in Terraform 0.11.12 and later
+  # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
+  
+  # changed etag with source hash 
+  # https://stackoverflow.com/questions/54330751/terraform-s3-bucket-objects-etag-keeps-updating-on-each-apply
+
+  # etag = "${md5(file("path/to/file"))}"
+  source_hash = fileexists("${local.datacron_yfinance_folder}/lambda_cron_code.zip") ? filemd5("${local.datacron_yfinance_folder}/lambda_cron_code.zip") : ""
+  
+  depends_on = [null_resource.lambda_yfinance_daily_batch_code_zip]
+}
+
+
 
 # can be partially replaced with `data "archive_file"`
 resource "null_resource" "lambda_yfinance_daily_batch_layer_zip" {
@@ -62,9 +82,9 @@ resource "null_resource" "lambda_yfinance_daily_batch_layer_zip" {
 
         pip install --target ${local.datacron_yfinance_folder}/lambda_cron_layer/python/ -q -r ${local.datacron_yfinance_folder}/requirements.txt
 
-        find ${local.datacron_yfinance_folder}/lambda_cron_layer/ -type d -name 'botocore*' -exec rm -r {} +
-        find ${local.datacron_yfinance_folder}/lambda_cron_layer/ -type d -name 'jmespath*' -exec rm -r {} +
-        find ${local.datacron_yfinance_folder}/lambda_cron_layer/ -type d -name 'six*' -exec rm -r {} +
+        # find ${local.datacron_yfinance_folder}/lambda_cron_layer/ -type d -name 'botocore*' -exec rm -r {} +
+        # find ${local.datacron_yfinance_folder}/lambda_cron_layer/ -type d -name 'jmespath*' -exec rm -r {} +
+        # find ${local.datacron_yfinance_folder}/lambda_cron_layer/ -type d -name 'six*' -exec rm -r {} +
 
 	      cd ${local.datacron_yfinance_folder}/lambda_cron_layer/ && zip -r -q ../lambda_cron_layer.zip .
 
@@ -73,34 +93,20 @@ resource "null_resource" "lambda_yfinance_daily_batch_layer_zip" {
   }
 }
 
-resource "aws_s3_object" "lambda_yfinance_daily_batch_code_zip" {
-  bucket = "${var.code_bucket_name}"
-  key    = "yahoo-finance/lambda_cron_code.zip"
-  source = "${local.datacron_yfinance_folder}/lambda_cron_code.zip"
-
-  # The filemd5() function is available in Terraform 0.11.12 and later
-  # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
-  
-  # changed etag with source hash 
-  # https://stackoverflow.com/questions/54330751/terraform-s3-bucket-objects-etag-keeps-updating-on-each-apply
-
-  # etag = "${md5(file("path/to/file"))}"
-  source_hash = filemd5("${local.datacron_yfinance_folder}/lambda_cron_code.zip")
-  
-  depends_on = [null_resource.lambda_yfinance_daily_batch_code_zip]
-}
-
 resource "aws_s3_object" "lambda_yfinance_daily_batch_layer_zip" {
   bucket = "${var.code_bucket_name}"
   key    = "yahoo-finance/lambda_cron_layer.zip"
   source = "${local.datacron_yfinance_folder}/lambda_cron_layer.zip"
 
-  # changed etag with source hash 
+  # The filemd5() function is available in Terraform 0.11.12 and later
+  # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
+  # etag = "${md5(file("path/to/file"))}"
   # https://stackoverflow.com/questions/54330751/terraform-s3-bucket-objects-etag-keeps-updating-on-each-apply
 
   # etag = filemd5("${local.datacron_yfinance_folder}/requirements.txt") 
-  source_hash = filemd5("${local.datacron_yfinance_folder}/requirements.txt") 
-  
+  # source_hash = filemd5("${local.datacron_yfinance_folder}/requirements.txt") 
+  source_hash = fileexists("${local.datacron_yfinance_folder}/lambda_cron_layer.zip") ? filemd5("${local.datacron_yfinance_folder}/lambda_cron_layer.zip") : ""
+
   depends_on = [ null_resource.lambda_yfinance_daily_batch_layer_zip ]
 }
 
