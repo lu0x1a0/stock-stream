@@ -2,7 +2,9 @@ import os, json, datetime, sys
 import concurrent.futures
 import logging.config
 
-import boto3
+import boto3 
+import s3fs #force dependency check when using lambda layers
+
 import yaml
 import yfinance as yf
 
@@ -28,6 +30,20 @@ with open(cfg_file_name, "r") as configfile:
 
 # logging.getLogger('yfinance').addHandler(logging.FileHandler('./lambda.log'))
 # logger.propagate = True
+
+def lambda_get_symbols_data_multi_test(event, context):
+    logger.info("before boto")
+    s3_client = boto3.client('s3', 
+                      #aws_access_key_id='<your_access_key_id>', 
+                      #aws_secret_access_key='<your_secret_access_key>' 
+                      )
+
+    objects = s3_client.list_objects_v2(Bucket='sluo-stock-data-dev')
+    
+    logger.info("entering debug list")
+    for obj in objects.get('Contents',[]):
+        logger.info(f"{obj['Key']}")
+
 
 
 def lambda_get_symbols_data_multi(event, context):

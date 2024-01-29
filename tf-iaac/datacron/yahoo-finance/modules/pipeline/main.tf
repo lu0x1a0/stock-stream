@@ -155,7 +155,7 @@ resource "aws_iam_policy" "lambda_yfinance_daily_batch_s3_upload" {
           Action = [
               "s3:*"
           ]
-          Resource = "arn:aws:s3:::${var.data_bucket_name}"
+          Resource = "arn:aws:s3:::${var.data_bucket_name}/*"
       }
     ]
   })
@@ -188,7 +188,7 @@ resource "aws_lambda_function" "lambda_yfinance_daily_batch" {
 
   runtime = "python3.11"
 
-  timeout = 900 # 60*15 seconds, or 15 minutes
+  timeout = 300 #900 # 60*15 seconds, or 15 minutes
 
   environment {
     variables = {
